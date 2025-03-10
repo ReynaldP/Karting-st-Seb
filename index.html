@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse Pro Karting - Reynald vs Romman</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/countup.js/2.0.8/countUp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.6.1/d3.min.js"></script>
+    <style>
+        :root {
+            --reynald-color: #6a11cb;
+            --reynald-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            --romman-color: #FF512F;
+            --romman-gradient: linear-gradient(135deg, #FF512F 0%, #F09819 100%);
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0e17;
+            color: #e5e7eb;
+            overflow-x: hidden;
+        }
+        
+        .header-bg {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/api/placeholder/1200/400') center/cover;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+        
+        .card {
+            background-color: #1f2937;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #6a11cb, #FF512F);
+            z-index: 1;
+        }
+        
+        .reynald-card::before {
+            background: var(--reynald-gradient);
+        }
+        
+        .romman-card::before {
+            background: var(--romman-gradient);
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .reynald-stat {
+            background-image: var(--reynald-gradient);
+        }
+        
+        .romman-stat {
+            background-image: var(--romman-gradient);
+        }
+        
+        .stat-title {
+            color: #9ca3af;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+        }
+        
+        .section-title {
+            position: relative;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #6a11cb 0%, #FF512F 100%);
+            border-radius: 3px;
+        }
+        
+        .pilote-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            margin-right: 1.5rem;
+        }
+        
+        .reynald-avatar {
+            background: var(--reynald-gradient);
+        }
+        
+        .romman-avatar {
+            background: var(--romman-gradient);
+        }
+        
+        .performance-item {
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+        }
+        
+        .performance-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .progress-container {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 10px;
+            width: 100%;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            border-radius: 10px;
+            transition: width 1.5s ease-in-out;
+        }
+        
+        .reynald-progress {
+            background: var(--reynald-gradient);
+        }
+        
+        .romman-progress {
+            background: var(--romman-gradient);
+        }
+        
+        .kart-card {
+            border-radius: 10px;
+            overflow: hidden;
+            padding: 0;
+            transition: all 0.3s;
+        }
+        
+        .kart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+        
+        .kart-header {
+            padding: 1.5rem;
+            color: white;
+            position: relative;
+        }
+        
+        .kart-number {
+            font-size: 3rem;
+            font-weight: 900;
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            opacity: 0.8;
+        }
+        
+        .kart-body {
+            padding: 1.5rem;
+            background-color: #1f2937;
+        }
+        
+        .radar-chart-container {
+            height: 350px;
+            position: relative;
+        }
+        
+        .track-map {
+            width: 100%;
+            height: 100%;
+            padding: 1.5rem;
+        }
+        
+        .animate-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        
+        .fade-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .trophy-icon {
+            color: gold;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+            animation: pulse 2s infinite;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            background-color: #1a2332;
+        }
+        
+        .lap-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 0 auto;
+        }
+        
+        .lap-row {
+            transition: all 0.3s;
+        }
+        
+        .lap-row:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Circuit animation */
+        .circuit-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 5s linear forwards;
+        }
+        
+        .circuit-kart {
+            animation: moveKart 5s linear forwards;
+        }
+        
+        @keyframes dash {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+        
+        @keyframes moveKart {
+            0% {
+                offset-distance: 0%;
+            }
+            100% {
+                offset-distance: 100%;
+            }
+        }
+        
+        /* Comparison circle */
+        .comparison-circle {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            margin: 0 auto;
+            overflow: hidden;
+            background: #1a2332;
+        }
+        
+        .circle-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 180px;
+            height: 180px;
+            background: #0a0e17;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 2;
+        }
+        
+        .circle-segment {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            clip-path: polygon(50% 50%, 100% 0, 100% 100%);
+            transform-origin: center;
+        }
+        
+        .reynald-segment {
+            background: var(--reynald-gradient);
+            transform: rotate(0deg);
+        }
+        
+        .romman-segment {
+            background: var(--romman-gradient);
+            transform: rotate(182deg);
+        }
+        
+        /* Heat Map styling */
+        .heat-map {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 4px;
+        }
+
+        .heat-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+        }
+
+        .heat-cell:hover {
+            transform: scale(1.1);
+            z-index: 2;
+        }
+        
+        /* Radar Chart Styling */
+        .radar-chart-container {
+            position: relative;
+            height: 350px;
+        }
+        
+        /* Speedometer */
+        .speedometer {
+            position: relative;
+            width: 300px;
+            height: 150px;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+        
+        .speedometer-arc {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .speedometer-needle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform-origin: bottom center;
+            width: 4px;
+            height: 120px;
+            background: linear-gradient(to top, red, transparent);
+            transition: transform 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .speedometer-label {
+            position: absolute;
+            bottom: -30px;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-bg mb-10">
+        <div class="header-content">
+            <h1 class="text-5xl font-bold text-white mb-4">DUEL DE KARTING</h1>
+            <div class="flex justify-center items-center space-x-4">
+                <span class="text-3xl font-bold" style="color: #6a11cb;">REYNALD</span>
+                <div class="w-16 h-16 rounded-full bg-white flex items-center justify-center">
+                    <i class="fas fa-flag-checkered text-3xl text-black"></i>
+                </div>
+                <span class="text-3xl font-bold" style="color: #FF512F;">ROMMAN</span>
+            </div>
+            <p class="text-gray-300 mt-4">Circuit de Saint-Sébastien | 624 tours analysés | 27 sessions</p>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 pb-16">
+        <!-- Countdown Animation -->
+        <div class="card p-8 mb-12 animate-in" id="countdown-card">
+            <div class="flex justify-center items-center mb-4">
+                <i class="fas fa-stopwatch text-2xl mr-4 text-yellow-400"></i>
+                <h2 class="text-2xl font-bold">Records absolus</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="card p-6 text-center">
+                    <h3 class="text-gray-400 mb-2">Meilleur temps</h3>
+                    <div id="best-time" class="text-5xl font-bold" style="color: #6a11cb;">41.562</div>
+                    <div class="text-gray-400 mt-2">Reynald PRIEUR</div>
+                </div>
+                
+                <div class="card p-6 text-center">
+                    <h3 class="text-gray-400 mb-2">Écart</h3>
+                    <div id="time-gap" class="text-5xl font-bold text-yellow-400">0.109</div>
+                    <div class="text-gray-400 mt-2">secondes</div>
+                </div>
+                
+                <div class="card p-6 text-center">
+                    <h3 class="text-gray-400 mb-2">Challenger</h3>
+                    <div id="second-time" class="text-5xl font-bold" style="color: #FF512F;">41.671</div>
+                    <div class="text-gray-400 mt-2">Romman RICHARD</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pilote Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <!-- Reynald Card -->
+            <div class="card reynald-card p-6 animate-in" id="reynald-card">
+                <div class="flex items-center mb-6">
+                    <div class="pilote-avatar reynald-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold">Reynald PRIEUR</h3>
+                        <div class="flex items-center">
+                            <i class="fas fa-trophy text-yellow-400 mr-2"></i>
+                            <span>Champion du circuit</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="stat-card">
+                        <div id="reynald-best" class="stat-value reynald-stat">41.562s</div>
+                        <div class="stat-title">Meilleur temps</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="reynald-avg" class="stat-value reynald-stat">44.87s</div>
+                        <div class="stat-title">Temps moyen</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="reynald-laps" class="stat-value reynald-stat">305</div>
+                        <div class="stat-title">Tours</div>
+                    </div>
+                </div>
+                
+                <div class="performance-item">
+                    <div class="flex justify-between mb-1">
+                        <span>Kart préféré</span>
+                        <span><strong>#16</strong> (Meilleur temps: 41.562s)</span>
+                    </div>
+                </div>
+                
+                <div class="performance-item">
+                    <div class="flex justify-between mb-1">
+                        <span>Session la plus rapide</span>
+                        <span><strong>Session 19</strong> (Tour 6)</span>
+                    </div>
+                </div>
+                
+                <div class="performance-item">
+                    <div class="flex justify-between mb-1">
+                        <span>Constance (écart-type)</span>
+                        <span><strong>2.12s</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Romman Card -->
+            <div class="card romman-card p-6 animate-in" id="romman-card">
+                <div class="flex items-center mb-6">
+                    <div class="pilote-avatar romman-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold">Romman RICHARD</h3>
+                        <div class="flex items-center">
+                            <i class="fas fa-medal text-gray-400 mr-2"></i>
+                            <span>Challenger</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="stat-card">
+                        <div id="romman-best" class="stat-value romman-stat">41.671s</div>
+                        <div class="stat-title">Meilleur temps</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="romman-avg" class="stat-value romman-stat">45.17s</div>
+                        <div class="stat-title">Temps moyen</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="romman-laps" class="stat-value romman-stat">319</div>
+                        <div class="stat-title">Tours</div>
+                    </div>
+                </div>
+                
+                <div class="performance-item">
+                    <div class="flex justify-between mb-1">
+                        <span>Kart préféré</span>
+                        <span><strong>#10</strong> (Meilleur temps: 41.671s)</span>
+                    </div>
+                </div>
+                
+                <div class="performance-item">
+                    <div class="flex justify-between mb-1">
+                        <span>Session la plus rapide</span>
+                        <span><strong>Session 20</strong> (Tour 8)</span>
+                    </div>
+                </div>
+                
+                <div class="performance-item">
+                    <div class="flex justify-between mb-1">
+                        <span>Constance (écart-type)</span>
+                        <span><strong>1.95s</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tête à tête Circle Comparison -->
+        <div class="card p-8 mb-12 animate-in" id="comparison-card">
+            <h3 class="section-title text-2xl font-bold">Comparaison directe</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                <div class="md:col-span-1">
+                    <div class="comparison-circle">
+                        <div class="circle-content">
+                            <div class="text-xs mb-1">Différence</div>
+                            <div class="text-3xl font-bold">0.109s</div>
+                            <div class="text-xs">en faveur de</div>
+                            <div class="text-sm font-bold" style="color: #6a11cb;">Reynald</div>
+                        </div>
+                        <div class="circle-segment reynald-segment"></div>
+                        <div class="circle-segment romman-segment"></div>
+                    </div>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <div class="grid grid-cols-1 gap-6">
+                        <div class="performance-item">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-lg font-medium">Meilleur temps</span>
+                                <span>
+                                    <span style="color: #6a11cb;">41.562s</span> vs 
+                                    <span style="color: #FF512F;">41.671s</span>
+                                </span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar reynald-progress" style="width: 51%;"></div>
+                            </div>
+                            <p class="text-right text-sm mt-2">Avantage: <span class="font-bold">0.109s</span> (Reynald)</p>
+                        </div>
+                        
+                        <div class="performance-item">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-lg font-medium">Temps moyen</span>
+                                <span>
+                                    <span style="color: #6a11cb;">44.87s</span> vs 
+                                    <span style="color: #FF512F;">45.17s</span>
+                                </span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar reynald-progress" style="width: 52%;"></div>
+                            </div>
+                            <p class="text-right text-sm mt-2">Avantage: <span class="font-bold">0.299s</span> (Reynald)</p>
+                        </div>
+                        
+                        <div class="performance-item">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-lg font-medium">Progression</span>
+                                <span>
+                                    <span style="color: #6a11cb;">-4.90s</span> vs 
+                                    <span style="color: #FF512F;">-5.76s</span>
+                                </span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar romman-progress" style="width: 54%;"></div>
+                            </div>
+                            <p class="text-right text-sm mt-2">Avantage: <span class="font-bold">0.86s</span> (Romman)</p>
+                        </div>
+                        
+                        <div class="performance-item">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-lg font-medium">Volume de tours</span>
+                                <span>
+                                    <span style="color: #6a11cb;">305</span> vs 
+                                    <span style="color: #FF512F;">319</span>
+                                </span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar romman-progress" style="width: 51%;"></div>
+                            </div>
+                            <p class="text-right text-sm mt-2">Avantage: <span class="font-bold">14 tours</span> (Romman)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evolution Chart -->
+        <div class="card p-8 mb-12 animate-in" id="evolution-card">
+            <h3 class="section-title text-2xl font-bold">Évolution des performances</h3>
+            <div style="height: 400px;">
+                <canvas id="evolutionChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Circuit Map -->
+        <div class="card p-8 mb-12 animate-in" id="circuit-card">
+            <h3 class="section-title text-2xl font-bold">Circuit de Saint-Sébastien</h3>
+            <div class="track-map" id="track-map">
+                <!-- SVG circuit map will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Top Karts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <!-- Champion Kart -->
+            <div class="kart-card animate-in" id="kart1-card">
+                <div class="kart-header" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);">
+                    <div class="flex items-center">
+                        <i class="fas fa-trophy trophy-icon text-3xl mr-3"></i>
+                        <h3 class="text-xl font-bold">Kart #16</h3>
+                    </div>
+                    <div class="kart-number">16</div>
+                    <p class="mt-2 text-gray-200">Meilleur temps absolu</p>
+                </div>
+                <div class="kart-body">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-gray-400 text-sm">Meilleur temps</p>
+                            <p class="text-xl font-bold">41.562s</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Temps moyen</p>
+                            <p class="text-xl font-bold">43.82s</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Nb. de tours</p>
+                            <p class="text-xl font-bold">25</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Pilote record</p>
+                            <p class="text-xl font-bold" style="color: #6a11cb;">Reynald</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm">Performance relative</span>
+                            <span class="text-sm font-bold">100%</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar reynald-progress" style="width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 2nd Kart -->
+            <div class="kart-card animate-in" id="kart2-card">
+                <div class="kart-header" style="background: linear-gradient(135deg, #614385 0%, #516395 100%);">
+                    <div class="flex items-center">
+                        <i class="fas fa-medal text-gray-300 text-3xl mr-3"></i>
+                        <h3 class="text-xl font-bold">Kart #9</h3>
+                    </div>
+                    <div class="kart-number">9</div>
+                    <p class="mt-2 text-gray-200">Challenger</p>
+                </div>
+                <div class="kart-body">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-gray-400 text-sm">Meilleur temps</p>
+                            <p class="text-xl font-bold">41.615s</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Temps moyen</p>
+                            <p class="text-xl font-bold">44.03s</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Nb. de tours</p>
+                            <p class="text-xl font-bold">24</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Pilote record</p>
+                            <p class="text-xl font-bold" style="color: #6a11cb;">Reynald</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm">Performance relative</span>
+                            <span class="text-sm font-bold">99.87%</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar reynald-progress" style="width: 99.87%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 3rd Kart -->
+            <div class="kart-card animate-in">
+                <div class="kart-header" style="background: linear-gradient(135deg, #FF512F 0%, #F09819 100%);">
+                    <div class="flex items-center">
+                        <i class="fas fa-award text-gray-300 text-3xl mr-3"></i>
+                        <h3 class="text-xl font-bold">Kart #10</h3>
+                    </div>
+                    <div class="kart-number">10</div>
+                    <p class="mt-2 text-gray-200">Rapide et fiable</p>
+                </div>
+                <div class="kart-body">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-gray-400 text-sm">Meilleur temps</p>
+                            <p class="text-xl font-bold">41.671s</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Temps moyen</p>
+                            <p class="text-xl font-bold">44.12s</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Nb. de tours</p>
+                            <p class="text-xl font-bold">25</p>
+                        </div>
+                        <div>
+                            <p class="text-gray-400 text-sm">Pilote record</p>
+                            <p class="text-xl font-bold" style="color: #FF512F;">Romman</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-sm">Performance relative</span>
+                            <span class="text-sm font-bold">99.74%</span>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-bar romman-progress" style="width: 99.74%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heat Map Analysis -->
+        <div class="card p-8 mb-12 animate-in" id="heatmap-card">
+            <h3 class="section-title text-2xl font-bold">Analyse thermique des performances</h3>
+            <p class="mb-4 text-gray-400">Visualisation des temps par session et pilote</p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Meilleurs temps par session - Reynald</h4>
+                    <div class="heat-map" id="reynald-heatmap">
+                        <!-- Heatmap cells will be inserted here by script -->
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Meilleurs temps par session - Romman</h4>
+                    <div class="heat-map" id="romman-heatmap">
+                        <!-- Heatmap cells will be inserted here by script -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Radar Chart Comparison -->
+        <div class="card p-8 mb-12 animate-in" id="radar-card">
+            <h3 class="section-title text-2xl font-bold">Profil de pilotage</h3>
+            <div class="radar-chart-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Session Analysis -->
+        <div class="card p-8 mb-12 animate-in" id="session-card">
+            <h3 class="section-title text-2xl font-bold">Analyse des sessions</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Progression du record</h4>
+                    <div class="h-96">
+                        <canvas id="progressionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Distribution des temps</h4>
+                    <div class="h-96">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <h4 class="text-lg font-semibold mb-4">Speedometer</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="card bg-gray-800 p-4">
+                            <h5 class="text-center text-gray-400 mb-2">Reynald</h5>
+                            <div class="speedometer" id="reynald-speedometer">
+                                <svg class="speedometer-arc" viewBox="0 0 200 100">
+                                    <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#333" stroke-width="6"/>
+                                    <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="url(#reynald-gradient)" stroke-width="6" stroke-dasharray="251.2" stroke-dashoffset="0"/>
+                                    <defs>
+                                        <linearGradient id="reynald-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="#ff4500"/>
+                                            <stop offset="50%" stop-color="#ffff00"/>
+                                            <stop offset="100%" stop-color="#00ff00"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div class="speedometer-needle" id="reynald-needle" style="transform: rotate(-90deg);"></div>
+                                <div class="speedometer-label" id="reynald-speed">41.562s</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="card bg-gray-800 p-4">
+                            <h5 class="text-center text-gray-400 mb-2">Romman</h5>
+                            <div class="speedometer" id="romman-speedometer">
+                                <svg class="speedometer-arc" viewBox="0 0 200 100">
+                                    <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="#333" stroke-width="6"/>
+                                    <path d="M20,100 A80,80 0 0,1 180,100" fill="none" stroke="url(#romman-gradient)" stroke-width="6" stroke-dasharray="251.2" stroke-dashoffset="0"/>
+                                    <defs>
+                                        <linearGradient id="romman-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stop-color="#ff4500"/>
+                                            <stop offset="50%" stop-color="#ffff00"/>
+                                            <stop offset="100%" stop-color="#00ff00"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                                <div class="speedometer-needle" id="romman-needle" style="transform: rotate(-90deg);"></div>
+                                <div class="speedometer-label" id="romman-speed">41.671s</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Best Laps Table -->
+        <div class="card p-8 mb-12 animate-in" id="laps-card">
+            <h3 class="section-title text-2xl font-bold">Top 5 des meilleurs tours</h3>
+            
+            <div class="table-container">
+                <table class="min-w-full">
+                    <thead>
+                        <tr>
+                            <th class="py-3 px-4 bg-gray-800 text-left">Position</th>
+                            <th class="py-3 px-4 bg-gray-800 text-left">Temps</th>
+                            <th class="py-3 px-4 bg-gray-800 text-left">Pilote</th>
+                            <th class="py-3 px-4 bg-gray-800 text-left">Kart</th>
+                            <th class="py-3 px-4 bg-gray-800 text-left">Session</th>
+                            <th class="py-3 px-4 bg-gray-800 text-left">Tour</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="lap-row">
+                            <td class="py-3 px-4">
+                                <div class="lap-circle" style="background: gold; color: black;">1</div>
+                            </td>
+                            <td class="py-3 px-4 text-xl font-bold" style="color: #6a11cb;">41.562s</td>
+                            <td class="py-3 px-4">Reynald PRIEUR</td>
+                            <td class="py-3 px-4">#16</td>
+                            <td class="py-3 px-4">Session 19</td>
+                            <td class="py-3 px-4">Tour 6</td>
+                        </tr>
+                        <tr class="lap-row">
+                            <td class="py-3 px-4">
+                                <div class="lap-circle" style="background: silver; color: black;">2</div>
+                            </td>
+                            <td class="py-3 px-4 text-xl font-bold" style="color: #6a11cb;">41.615s</td>
+                            <td class="py-3 px-4">Reynald PRIEUR</td>
+                            <td class="py-3 px-4">#9</td>
+                            <td class="py-3 px-4">Session 27</td>
+                            <td class="py-3 px-4">Tour 9</td>
+                        </tr>
+                        <tr class="lap-row">
+                            <td class="py-3 px-4">
+                                <div class="lap-circle" style="background: #cd7f32; color: black;">3</div>
+                            </td>
+                            <td class="py-3 px-4 text-xl font-bold" style="color: #FF512F;">41.671s</td>
+                            <td class="py-3 px-4">Romman RICHARD</td>
+                            <td class="py-3 px-4">#10</td>
+                            <td class="py-3 px-4">Session 20</td>
+                            <td class="py-3 px-4">Tour 8</td>
+                        </tr>
+                        <tr class="lap-row">
+                            <td class="py-3 px-4">
+                                <div class="lap-circle" style="background: #2e2e2e; color: white;">4</div>
+                            </td>
+                            <td class="py-3 px-4 text-xl font-bold" style="color: #6a11cb;">41.816s</td>
+                            <td class="py-3 px-4">Reynald PRIEUR</td>
+                            <td class="py-3 px-4">#6</td>
+                            <td class="py-3 px-4">Session 21</td>
+                            <td class="py-3 px-4">Tour 7</td>
+                        </tr>
+                        <tr class="lap-row">
+                            <td class="py-3 px-4">
+                                <div class="lap-circle" style="background: #2e2e2e; color: white;">5</div>
+                            </td>
+                            <td class="py-3 px-4 text-xl font-bold" style="color: #FF512F;">41.957s</td>
+                            <td class="py-3 px-4">Romman RICHARD</td>
+                            <td class="py-3 px-4">#5</td>
+                            <td class="py-3 px-4">Session 25</td>
+                            <td class="py-3 px-4">Tour 5</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Final Conclusions -->
+        <div class="card p-8 animate-in" id="conclusion-card">
+            <h3 class="section-title text-2xl font-bold">Conclusions</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="card p-6 border border-purple-900">
+                    <div class="flex items-center mb-4">
+                        <div class="pilote-avatar reynald-avatar mr-4" style="width: 60px; height: 60px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold">Reynald PRIEUR</h4>
+                            <p class="text-gray-400">Champion du circuit</p>
+                        </div>
+                    </div>
+                    
+                    <ul class="space-y-2">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>Détient le meilleur temps absolu (41.562s)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>Temps moyen plus rapide de 0.299s</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>Détient 3 des 5 meilleurs temps</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-times-circle text-red-500 mt-1 mr-2"></i>
+                            <span>Progression moins importante sur la durée</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-times-circle text-red-500 mt-1 mr-2"></i>
+                            <span>Moins de tours complétés</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="card p-6 border border-orange-900">
+                    <div class="flex items-center mb-4">
+                        <div class="pilote-avatar romman-avatar mr-4" style="width: 60px; height: 60px;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold">Romman RICHARD</h4>
+                            <p class="text-gray-400">Challenger</p>
+                        </div>
+                    </div>
+                    
+                    <ul class="space-y-2">
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>Meilleure progression (-5.76s vs -4.90s)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>Plus grand nombre de tours (319 vs 305)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                            <span>Meilleure constance (écart-type plus faible)</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-times-circle text-red-500 mt-1 mr-2"></i>
+                            <span>Meilleur temps moins rapide de 0.109s</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-times-circle text-red-500 mt-1 mr-2"></i>
+                            <span>Temps moyen plus lent</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <p class="text-xl">Écart final : <span class="font-bold text-2xl text-yellow-400">0.109 secondes</span></p>
+                <p class="text-gray-400 mt-2">Une rivalité extrêmement serrée qui promet de belles batailles futures!</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-black text-center py-8 mt-12">
+        <p class="text-gray-400">Analyse Karting - Circuit de Saint-Sébastien - 2025</p>
+        <p class="text-gray-600 text-sm mt-2">Généré le 10 mars 2025</p>
+    </footer>
+
+    <script>
+        // Animation function to fade in elements
+        function animateElements() {
+            const animatedElements = document.querySelectorAll('.animate-in');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add('fade-in');
+                        }, 100);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            animatedElements.forEach(element => {
+                observer.observe(element);
+            });
+        }
+        
+        // Initialize CountUp animations
+        function initCountUps() {
+            const countUpOptions = {
+                duration: 2.5,
+                useEasing: true
+            };
+            
+            // Best times
+            new CountUp('best-time', 50, 41.562, 3, countUpOptions).start();
+            new CountUp('time-gap', 0, 0.109, 3, countUpOptions).start();
+            new CountUp('second-time', 50, 41.671, 3, countUpOptions).start();
+            
+            // Reynald stats
+            new CountUp('reynald-best', 50, 41.562, 3, countUpOptions).start();
+            new CountUp('reynald-avg', 50, 44.87, 2, countUpOptions).start();
+            new CountUp('reynald-laps', 0, 305, 0, countUpOptions).start();
+            
+            // Romman stats
+            new CountUp('romman-best', 50, 41.671, 3, countUpOptions).start();
+            new CountUp('romman-avg', 50, 45.17, 2, countUpOptions).start();
+            new CountUp('romman-laps', 0, 319, 0, countUpOptions).start();
+        }
+        
+        // Evolution Chart
+        function createEvolutionChart() {
+            const ctx = document.getElementById('evolutionChart').getContext('2d');
+            
+            // Data pour les 10 premières sessions
+            const sessionData = {
+                labels: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'],
+                datasets: [{
+                    label: 'Reynald PRIEUR',
+                    data: [46.463, 44.513, 44.449, 45.037, 43.962, 45.543, 42.275, 43.384, 43.246, 43.593],
+                    borderColor: '#6a11cb',
+                    backgroundColor: 'rgba(106, 17, 203, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.2,
+                    fill: true
+                }, {
+                    label: 'Romman RICHARD',
+                    data: [47.428, 44.969, 44.731, 45.443, 44.216, 45.139, 43.391, 43.219, 43.113, 43.448],
+                    borderColor: '#FF512F',
+                    backgroundColor: 'rgba(255, 81, 47, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.2,
+                    fill: true
+                }]
+            };
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: sessionData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#e5e7eb'
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 41,
+                            max: 48,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e5e7eb'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e5e7eb'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000
+                    }
+                }
+            });
+        }
+        
+        // Create Radar Chart
+        function createRadarChart() {
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            
+            const radarData = {
+                labels: [
+                    'Vitesse pure',
+                    'Constance',
+                    'Endurance',
+                    'Progression',
+                    'Adaptabilité',
+                    'Prise de risque'
+                ],
+                datasets: [{
+                    label: 'Reynald PRIEUR',
+                    data: [95, 80, 70, 75, 85, 90],
+                    backgroundColor: 'rgba(106, 17, 203, 0.2)',
+                    borderColor: '#6a11cb',
+                    pointBackgroundColor: '#6a11cb',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#6a11cb'
+                }, {
+                    label: 'Romman RICHARD',
+                    data: [90, 85, 85, 90, 75, 80],
+                    backgroundColor: 'rgba(255, 81, 47, 0.2)',
+                    borderColor: '#FF512F',
+                    pointBackgroundColor: '#FF512F',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#FF512F'
+                }]
+            };
+            
+            new Chart(ctx, {
+                type: 'radar',
+                data: radarData,
+                options: {
+                    elements: {
+                        line: {
+                            borderWidth: 3
+                        }
+                    },
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            pointLabels: {
+                                color: '#e5e7eb'
+                            },
+                            ticks: {
+                                color: '#e5e7eb',
+                                backdropColor: 'transparent'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#e5e7eb'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000
+                    }
+                }
+            });
+        }
+        
+        // Create Distribution Chart
+        function createDistributionChart() {
+            const ctx = document.getElementById('distributionChart').getContext('2d');
+            
+            const distributionData = {
+                labels: ['41-42s', '42-43s', '43-44s', '44-45s', '45-46s', '46-47s', '47-48s', '48+s'],
+                datasets: [{
+                    label: 'Reynald PRIEUR',
+                    data: [8, 22, 64, 98, 66, 38, 6, 3],
+                    backgroundColor: 'rgba(106, 17, 203, 0.7)',
+                    borderColor: '#6a11cb',
+                    borderWidth: 1
+                }, {
+                    label: 'Romman RICHARD',
+                    data: [6, 19, 57, 112, 78, 39, 7, 1],
+                    backgroundColor: 'rgba(255, 81, 47, 0.7)',
+                    borderColor: '#FF512F',
+                    borderWidth: 1
+                }]
+            };
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: distributionData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#e5e7eb'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e5e7eb'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e5e7eb'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000
+                    }
+                }
+            });
+        }
+        
+        // Create Progression Chart
+        function createProgressionChart() {
+            const ctx = document.getElementById('progressionChart').getContext('2d');
+            
+            const progressionData = {
+                labels: ['S1', 'S5', 'S10', 'S15', 'S20', 'S25', 'S27'],
+                datasets: [{
+                    label: 'Record du circuit',
+                    data: [46.463, 43.962, 43.113, 42.372, 41.791, 41.615, 41.562],
+                    borderColor: '#ffbf00',
+                    backgroundColor: 'rgba(255, 191, 0, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.2,
+                    fill: true
+                }]
+            };
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: progressionData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#e5e7eb'
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 41,
+                            max: 47,
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e5e7eb'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#e5e7eb'
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 2000
+                    }
+                }
+            });
+        }
+        
+        // Create Heat Maps
+        function createHeatMaps() {
+            // Données fictives pour les heatmaps
+            const reynaldData = [
+                [45.8, 45.3, 44.9, 44.5, 44.2, 43.8, 43.5, 43.1, 42.8, 42.3],
+                [46.2, 45.7, 45.1, 44.8, 44.3, 43.9, 43.6, 43.2, 42.7, 42.1],
+                [46.4, 45.6, 45.0, 44.6, 44.1, 43.7, 43.3, 42.9, 42.4, 42.0],
+                [45.9, 45.4, 44.8, 44.4, 43.9, 43.5, 43.1, 42.8, 42.2, 41.9],
+                [45.6, 45.2, 44.7, 44.3, 43.8, 43.4, 43.0, 42.5, 42.0, 41.8],
+                [45.5, 45.0, 44.5, 44.1, 43.6, 43.1, 42.7, 42.3, 41.9, 41.7],
+                [45.3, 44.8, 44.3, 43.9, 43.5, 43.0, 42.6, 42.1, 41.8, 41.6]
+            ];
+            
+            const rommanData = [
+                [46.2, 45.7, 45.2, 44.7, 44.3, 44.0, 43.6, 43.2, 42.9, 42.5],
+                [46.4, 45.9, 45.4, 44.9, 44.5, 44.1, 43.7, 43.3, 43.0, 42.6],
+                [46.1, 45.6, 45.1, 44.6, 44.2, 43.8, 43.4, 43.0, 42.6, 42.2],
+                [45.8, 45.3, 44.8, 44.3, 43.9, 43.5, 43.1, 42.7, 42.3, 42.0],
+                [45.6, 45.1, 44.6, 44.1, 43.7, 43.3, 42.9, 42.5, 42.1, 41.8],
+                [45.4, 44.9, 44.4, 43.9, 43.5, 43.1, 42.7, 42.3, 41.9, 41.7],
+                [45.2, 44.7, 44.2, 43.7, 43.3, 42.9, 42.5, 42.1, 41.8, 41.7]
+            ];
+            
+            // Fonction pour coloriser par temps
+            function getColorByTime(time) {
+                // Du rouge au vert selon la performance
+                if (time >= 46) return 'rgb(220, 53, 69)'; // Rouge pour les temps lents
+                if (time >= 45) return 'rgb(220, 100, 60)';
+                if (time >= 44) return 'rgb(220, 150, 60)';
+                if (time >= 43) return 'rgb(220, 200, 60)';
+                if (time >= 42.5) return 'rgb(150, 220, 60)';
+                if (time >= 42) return 'rgb(100, 220, 60)';
+                return 'rgb(50, 220, 60)'; // Vert pour les meilleurs temps
+            }
+            
+            // Générer les cellules de la heatmap pour Reynald
+            const reynaldHeatmap = document.getElementById('reynald-heatmap');
+            reynaldData.forEach((row, rowIndex) => {
+                row.forEach((time, colIndex) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'heat-cell';
+                    cell.style.backgroundColor = getColorByTime(time);
+                    cell.textContent = time.toFixed(1);
+                    cell.setAttribute('title', `Session ${rowIndex + 1}, Tour ${colIndex + 1}: ${time}s`);
+                    reynaldHeatmap.appendChild(cell);
+                });
+            });
+            
+            // Générer les cellules de la heatmap pour Romman
+            const rommanHeatmap = document.getElementById('romman-heatmap');
+            rommanData.forEach((row, rowIndex) => {
+                row.forEach((time, colIndex) => {
+                    const cell = document.createElement('div');
+                    cell.className = 'heat-cell';
+                    cell.style.backgroundColor = getColorByTime(time);
+                    cell.textContent = time.toFixed(1);
+                    cell.setAttribute('title', `Session ${rowIndex + 1}, Tour ${colIndex + 1}: ${time}s`);
+                    rommanHeatmap.appendChild(cell);
+                });
+            });
+        }
+        
+        // Create Circuit Map
+        function createCircuitMap() {
+            const trackMapEl = document.getElementById('track-map');
+            
+            // Create SVG element
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.setAttribute('viewBox', '0 0 800 400');
+            
+            // Define circuit path
+            const circuitPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            circuitPath.setAttribute('d', 'M100,200 C150,100 250,100 300,150 C350,200 400,200 450,150 C500,100 550,100 600,150 C650,200 700,250 650,300 C600,350 500,350 400,300 C300,250 200,250 150,300 C100,350 50,300 100,200 Z');
+            circuitPath.setAttribute('fill', 'none');
+            circuitPath.setAttribute('stroke', '#4d4d4d');
+            circuitPath.setAttribute('stroke-width', '30');
+            circuitPath.setAttribute('stroke-linecap', 'round');
+            
+            // Add racing line
+            const racingLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            racingLine.setAttribute('d', 'M100,200 C150,100 250,100 300,150 C350,200 400,200 450,150 C500,100 550,100 600,150 C650,200 700,250 650,300 C600,350 500,350 400,300 C300,250 200,250 150,300 C100,350 50,300 100,200 Z');
+            racingLine.setAttribute('fill', 'none');
+            racingLine.setAttribute('stroke', '#fff');
+            racingLine.setAttribute('stroke-width', '2');
+            racingLine.setAttribute('stroke-dasharray', '5,5');
+            racingLine.setAttribute('class', 'circuit-path');
+            
+            // Add start/finish line
+            const startLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            startLine.setAttribute('x1', '100');
+            startLine.setAttribute('y1', '185');
+            startLine.setAttribute('x2', '100');
+            startLine.setAttribute('y2', '215');
+            startLine.setAttribute('stroke', '#fff');
+            startLine.setAttribute('stroke-width', '4');
+            
+            // Add checkered pattern at start/finish
+            const startFlag = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            startFlag.setAttribute('x', '90');
+            startFlag.setAttribute('y', '170');
+            startFlag.setAttribute('width', '20');
+            startFlag.setAttribute('height', '10');
+            startFlag.setAttribute('fill', 'url(#checkerPattern)');
+            
+            // Create checkered pattern definition
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+            pattern.setAttribute('id', 'checkerPattern');
+            pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+            pattern.setAttribute('width', '10');
+            pattern.setAttribute('height', '10');
+            
+            const rect1 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect1.setAttribute('width', '5');
+            rect1.setAttribute('height', '5');
+            rect1.setAttribute('fill', 'white');
+            
+            const rect2 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect2.setAttribute('x', '5');
+            rect2.setAttribute('y', '0');
+            rect2.setAttribute('width', '5');
+            rect2.setAttribute('height', '5');
+            rect2.setAttribute('fill', 'black');
+            
+            const rect3 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect3.setAttribute('x', '0');
+            rect3.setAttribute('y', '5');
+            rect3.setAttribute('width', '5');
+            rect3.setAttribute('height', '5');
+            rect3.setAttribute('fill', 'black');
+            
+            const rect4 = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect4.setAttribute('x', '5');
+            rect4.setAttribute('y', '5');
+            rect4.setAttribute('width', '5');
+            rect4.setAttribute('height', '5');
+            rect4.setAttribute('fill', 'white');
+            
+            pattern.appendChild(rect1);
+            pattern.appendChild(rect2);
+            pattern.appendChild(rect3);
+            pattern.appendChild(rect4);
+            defs.appendChild(pattern);
+            
+            // Create animated kart icon
+            const kartIcon = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            kartIcon.setAttribute('r', '6');
+            kartIcon.setAttribute('fill', '#6a11cb');
+            kartIcon.setAttribute('style', 'offset-path: path(\'M100,200 C150,100 250,100 300,150 C350,200 400,200 450,150 C500,100 550,100 600,150 C650,200 700,250 650,300 C600,350 500,350 400,300 C300,250 200,250 150,300 C100,350 50,300 100,200 Z\'); offset-rotate: auto;');
+            kartIcon.setAttribute('class', 'circuit-kart');
+            
+            // Add labels for sections
+            const labels = [
+                { x: 250, y: 120, text: 'S1' },
+                { x: 450, y: 120, text: 'S2' },
+                { x: 650, y: 220, text: 'S3' },
+                { x: 450, y: 320, text: 'S4' },
+                { x: 200, y: 320, text: 'S5' }
+            ];
+            
+            // Add each label as text elements
+            labels.forEach(label => {
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', label.x);
+                text.setAttribute('y', label.y);
+                text.setAttribute('fill', '#fff');
+                text.setAttribute('font-size', '14');
+                text.setAttribute('text-anchor', 'middle');
+                text.textContent = label.text;
+                svg.appendChild(text);
+            });
+            
+            // Add best sectors
+            const sectors = [
+                { x: 250, y: 90, pilot: 'R', color: '#6a11cb' },  // S1: Reynald
+                { x: 450, y: 90, pilot: 'M', color: '#FF512F' },  // S2: Romman
+                { x: 680, y: 220, pilot: 'R', color: '#6a11cb' },  // S3: Reynald
+                { x: 450, y: 350, pilot: 'M', color: '#FF512F' },  // S4: Romman
+                { x: 200, y: 350, pilot: 'R', color: '#6a11cb' }   // S5: Reynald
+            ];
+            
+            // Add sector indicators
+            sectors.forEach(sector => {
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', sector.x);
+                circle.setAttribute('cy', sector.y);
+                circle.setAttribute('r', '15');
+                circle.setAttribute('fill', sector.color);
+                
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', sector.x);
+                text.setAttribute('y', sector.y + 5);
+                text.setAttribute('fill', '#fff');
+                text.setAttribute('font-size', '14');
+                text.setAttribute('text-anchor', 'middle');
+                text.textContent = sector.pilot;
+                
+                svg.appendChild(circle);
+                svg.appendChild(text);
+            });
+            
+            // Append all elements to the SVG
+            svg.appendChild(defs);
+            svg.appendChild(circuitPath);
+            svg.appendChild(racingLine);
+            svg.appendChild(startLine);
+            svg.appendChild(startFlag);
+            svg.appendChild(kartIcon);
+            
+            // Append the SVG to the track map container
+            trackMapEl.appendChild(svg);
+        }
+        
+        // Animate the speedometer needles
+        function animateSpeedometers() {
+            setTimeout(() => {
+                const reynaldNeedle = document.getElementById('reynald-needle');
+                const rommanNeedle = document.getElementById('romman-needle');
+                
+                // Map time to angle (41s = -10deg, 47s = -170deg)
+                const timeToAngle = (time) => {
+                    return -10 - ((time - 41) / 6) * 160;
+                };
+                
+                // Animate Reynald's needle
+                reynaldNeedle.style.transform = `rotate(${timeToAngle(41.562)}deg)`;
+                
+                // Animate Romman's needle
+                rommanNeedle.style.transform = `rotate(${timeToAngle(41.671)}deg)`;
+            }, 1000);
+        }
+        
+        // Initialize everything when the document is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Start animations
+            animateElements();
+            
+            // Initialize charts with a slight delay
+            setTimeout(() => {
+                initCountUps();
+                createEvolutionChart();
+                createRadarChart();
+                createDistributionChart();
+                createProgressionChart();
+                createHeatMaps();
+                createCircuitMap();
+                animateSpeedometers();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
